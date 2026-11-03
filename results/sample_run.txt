@@ -1,5 +1,5 @@
 AI Lab 04 - A* Search and Heuristic Design
-Student: Dhia Alhaq Saleh Al-Hindrish | BS Software Engineering
+Student: Dheya Alhag | BS Software Engineering
 Python 3.11.6 (standard library only)
 
 ----------------------------------------------------------------------

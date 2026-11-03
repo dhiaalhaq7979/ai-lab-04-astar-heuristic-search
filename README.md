@@ -73,7 +73,7 @@ Overestimating B happens to change nothing, but A or C breaks optimality. So one
 
 ## Author
 
-**Dhia Alhaq Saleh Al-Hindrish** — BS Software Engineering, Superior University, Lahore
+**Dheya Alhag** — BS Software Engineering, Superior University, Lahore
 GitHub: [@dhiaalhaq7979](https://github.com/dhiaalhaq7979)
 
 Licensed under the [MIT License](LICENSE).
