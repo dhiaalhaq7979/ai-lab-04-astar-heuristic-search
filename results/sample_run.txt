@@ -1,0 +1,88 @@
+AI Lab 04 - A* Search and Heuristic Design
+Student: Dhia Alhaq Saleh Al-Hindrish | BS Software Engineering
+Python 3.11.6 (standard library only)
+
+----------------------------------------------------------------------
+Lab 4 | A* search, heuristic checks and overestimation
+----------------------------------------------------------------------
+graph: {'S': [('A', 1), ('B', 4)], 'A': [('C', 2)], 'B': [('G', 5)], 'C': [('G', 3)], 'G': []}
+manual astar(g, h, 'S', 'G') -> (6, ['S', 'A', 'C', 'G'])
+
+Heuristic check (supplied h):
+  Admissibility  h(n) <= h*(n)
+    node | h(n) | h*(n) | ok?
+    S    | 5    | 6     | yes
+    A    | 4    | 5     | yes
+    B    | 4    | 5     | yes
+    C    | 2    | 3     | yes
+    G    | 0    | 0     | yes
+  Consistency  h(u) <= c(u,v) + h(v)
+    edge  | h(u) | c + h(v)      | ok?
+    S->A  | 5    | 1 + 4 = 5    | yes
+    S->B  | 5    | 4 + 4 = 8    | yes
+    A->C  | 4    | 2 + 2 = 4    | yes
+    B->G  | 4    | 5 + 0 = 5    | yes
+    C->G  | 2    | 3 + 0 = 3    | yes
+  => admissible: True, consistent: True
+
+Tasks 1-2 | A* with the supplied heuristic:
+  h = {'S': 5, 'A': 4, 'B': 4, 'C': 2, 'G': 0}
+  # | action | node | g | h | f | generated | frontier after
+  1 | EXPAND | S | 0 | 5 | 5 | A(g=1, f=1+4=5), B(g=4, f=4+4=8) | A[f=5,g=1] B[f=8,g=4]
+  2 | EXPAND | A | 1 | 4 | 5 | C(g=3, f=3+2=5) | C[f=5,g=3] B[f=8,g=4]
+  3 | EXPAND | C | 3 | 2 | 5 | G(g=6, f=6+0=6) | G[f=6,g=6] B[f=8,g=4]
+  4 | GOAL   | G | 6 | 0 | 6 | - | B[f=8,g=4]
+  path S-A-C-G, cost 6 (check: 1 + 2 + 3 = 6)
+  expanded 3: S A C | pop order: S A C G
+
+Task 2 | UCS control (h = 0 everywhere, same code):
+  h = {'S': 0, 'A': 0, 'B': 0, 'C': 0, 'G': 0}
+  # | action | node | g | h | f | generated | frontier after
+  1 | EXPAND | S | 0 | 0 | 0 | A(g=1, f=1+0=1), B(g=4, f=4+0=4) | A[f=1,g=1] B[f=4,g=4]
+  2 | EXPAND | A | 1 | 0 | 1 | C(g=3, f=3+0=3) | C[f=3,g=3] B[f=4,g=4]
+  3 | EXPAND | C | 3 | 0 | 3 | G(g=6, f=6+0=6) | B[f=4,g=4] G[f=6,g=6]
+  4 | EXPAND | B | 4 | 0 | 4 | G(g=9 not better) | G[f=6,g=6]
+  5 | GOAL   | G | 6 | 0 | 6 | - | empty
+  path S-A-C-G, cost 6 (check: 1 + 2 + 3 = 6)
+  expanded 4: S A C B | pop order: S A C B G
+
+Task 3 | Overestimate: h(C) = 10 while the real remaining cost from C is 3
+  Admissibility  h(n) <= h*(n)
+    node | h(n) | h*(n) | ok?
+    S    | 5    | 6     | yes
+    A    | 4    | 5     | yes
+    B    | 4    | 5     | yes
+    C    | 10   | 3     | NO - overestimates
+    G    | 0    | 0     | yes
+  Consistency  h(u) <= c(u,v) + h(v)
+    edge  | h(u) | c + h(v)      | ok?
+    S->A  | 5    | 1 + 4 = 5    | yes
+    S->B  | 5    | 4 + 4 = 8    | yes
+    A->C  | 4    | 2 + 10 = 12   | yes
+    B->G  | 4    | 5 + 0 = 5    | yes
+    C->G  | 10   | 3 + 0 = 3    | NO
+  => admissible: False, consistent: False
+A* with h(C) = 10:
+  h = {'S': 5, 'A': 4, 'B': 4, 'C': 10, 'G': 0}
+  # | action | node | g | h | f | generated | frontier after
+  1 | EXPAND | S | 0 | 5 | 5 | A(g=1, f=1+4=5), B(g=4, f=4+4=8) | A[f=5,g=1] B[f=8,g=4]
+  2 | EXPAND | A | 1 | 4 | 5 | C(g=3, f=3+10=13) | B[f=8,g=4] C[f=13,g=3]
+  3 | EXPAND | B | 4 | 4 | 8 | G(g=9, f=9+0=9) | G[f=9,g=9] C[f=13,g=3]
+  4 | GOAL   | G | 9 | 0 | 9 | - | C[f=13,g=3]
+  path S-B-G, cost 9 (check: 4 + 5 = 9)
+  expanded 3: S A B | pop order: S A B G
+
+Summary:
+  run           | path    | cost | expansions
+  A* (given h)  | S-A-C-G | 6    | 3
+  UCS (h = 0)   | S-A-C-G | 6    | 4
+  A* h(C) = 10  | S-B-G   | 9    | 3
+
+Extra | overestimating each node separately:
+  Each row: one node gets h = h*(n) + 5, everything else unchanged
+  node | h*(n) | new h | path    | cost | still optimal?
+  A    | 5     | 10    | S-B-G   | 9    | NO
+  B    | 5     | 10    | S-A-C-G | 6    | yes
+  C    | 3     | 8     | S-B-G   | 9    | NO
+  -> overestimating B does not hurt here, but A or C does: a run that 'looks fine'
+     does not prove that an inadmissible heuristic is safe.
